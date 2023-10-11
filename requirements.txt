@@ -40,3 +40,7 @@ celery
 # for exe
 pyinstaller==5.13.0
 pyinstaller-hooks-contrib==2023.3
+
+# for doc disclosure
+datacompy
+fuzzywuzzy

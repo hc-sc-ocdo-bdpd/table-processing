@@ -1,6 +1,6 @@
-# File Processing Library
+# Table Processing Library
 
-This library contains tools for processing various file types for several purposes. This includes extracting metadata, calculating metrics between files such as cosine similarity and Levenshtein distance, and table data extraction. This software is under active development.
+This library contains tools for extracting data from scanned tables in PDF files. This is experimental software that is under development.
 
 ## Dependencies
 
@@ -21,21 +21,12 @@ There are two versions of the table extraction tool: a command line version and 
 
 This library contains several components in different directories:
 
-- file_processing: Utilities for opening a variety of different file types.
-- utils: support functions for the file_processing components.
-- resources: files used as inputs for various components of the software.
 - table_processing: Table extraction tools
 - tests: pytest test cases
-- src: contains deprecated software from an earlier version of this library. This directory is planned for removal as it is being replaced with file_processing tools
 - table_trials_results: Results in .xlsx format of the tests run on generated tables with a variety of randomized parameters including rows, columns, vertical/horizontal lines, font size, row height, margin, orientation, and special characters. Parameter values and performance metrics are tracked for each of the roughly 7000 generated tables along with overall summaries for each individual metric (mean, stdev, min, max, median, etc.).
 
 These include file processing tools (in the file_processing directory). This code is structured as follows:
 
-- `file_processing.File`: Entry point for processing a file. It selects the appropriate processor for a given file based on the file type.
-- `utils.FileProcessorStrategy`: An abstract base class (ABC) for processing files. Subclasses must implement the `process` method.
-- `file_processing.TextFileProcessor` and `PdfFileProcessor`: They inherit from `FileProcessorStrategy` and implement `process` method for .txt and .pdf files respectively.
-- `file_processing.FileMetricStrategy`: An ABC for calculating metrics between files. Subclasses must implement the `calculate` method.
-- `utils.CosineSimilarity` and `utils.LevenshteinDistance`: They inherit from `FileMetricStrategy` and implement the `calculate` method to compute cosine similarity and Levenshtein distance between files.
 - `table_processing.Table_Detector`: Entry point for the table processing tools.
 - `table_processing.benchmark_pipeline`: Performance testing pipeline for the table_processing components.
 
@@ -60,18 +51,5 @@ These include file processing tools (in the file_processing directory). This cod
   - Identified row limits gradually shift out of alignment before self-correction around the 30 row mark
 - More in-depth information on the testing results & future work is available in issue #65
 
-
-## Things To Do
-
-- [ ] Migrate this list to project milestones and issues
-- [ ] Extend `FileProcessorStrategy` to include more detailed metadata
-- [ ] Replace `print` statements with `logging` module
-- [ ] Implement OCR functionality for processing image-based PDF files
-- [ ] Integrate table extraction functionality
-- [ ] Add docstrings and type hinting to all classes and methods
-- [ ] Write tests to ensure the functionality of the library
-- [ ] Add support for more file types (.docx, .xlsx, .pptx, etc.)
-- [ ] Add more metrics for comparison between files (ex. jaccard)
-
-## Build table processing tools executable
+## Build executable
 Run the `table_processing/build.py` script. The intermediate output will be in the `build` directory. The final executable will be in the `dist` directory.

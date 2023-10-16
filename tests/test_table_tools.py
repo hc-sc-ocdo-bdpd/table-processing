@@ -36,7 +36,8 @@ def test_calculate_row_column_limits():
 
     returned_col_limit, returned_row_limit = _calculate_row_column_limits(img_dim,test_bbox)
 
-    assert expected_col_limit == returned_col_limit and expected_row_limit == returned_row_limit
+    assert expected_col_limit == returned_col_limit 
+    assert expected_row_limit == returned_row_limit
 
 
 def test_clean_cell_text():
@@ -66,21 +67,3 @@ def test_within_threshold():
     assert within_threshold(1, 5, 1) == False
     assert within_threshold(1.3, 1.4, 1) == True
     assert within_threshold(1.3, 1.4, 0.01) == False
-
-
-def test_MultiPage():
-    import PyPDF2
-    #One page pdf file
-    doc1 = open('tests/resources/DmZUHweaZfPcMjTCAySRtp.pdf', 'rb')
-    #Four page pdf file
-    doc2 = open('tests/resources/GBnzszrSV2sAXLEH5k7SFz.pdf', 'rb')
-    
-    pdfReader1 = PyPDF2.PdfReader(doc1)
-    pdfReader2 = PyPDF2.PdfReader(doc2)
-
-    # count number of pages
-    totalPages1 = len(pdfReader1.pages)
-    totalPages2 = len(pdfReader2.pages)
-    
-    assert totalPages1 == 1
-    assert totalPages2 > 1

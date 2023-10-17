@@ -7,6 +7,8 @@ import dash
 from dash.dependencies import Input, Output
 from dash import Dash, DiskcacheManager, html, callback, dcc, State, html 
 import diskcache
+import sys
+sys.path.insert(1, './table_processing')
 from Table_processor_main import process_content
 from pathlib import Path
 

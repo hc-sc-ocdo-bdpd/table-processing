@@ -25,7 +25,7 @@ def intermediate_path(good_output_path):
     yield str(output_dir) + '/intermediate_output/'
 
 
-@pytest.fixture()
+@pytest.fixture(scope = "function")
 def default_output():
     from table_processing.Table_processor_main import default_output
     if os.path.exists(default_output):

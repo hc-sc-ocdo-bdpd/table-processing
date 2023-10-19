@@ -3,7 +3,17 @@ import pytest
 sys.path.append(os.path.join(sys.path[0],'table_processing'))
 
 
-def test_metrics():
+variable_names = "parameter, value"
+values = [('Overlap', 1.000),               # dimensions
+          ('String Similarity', 0.888),     # overall contents
+          ('Completeness', 0.560),          # cell content completeness
+          ('Purity', 0.440),                # cell content purity
+          ('Precision', 0.225),             # cell neighbours/location
+          ('Recall', 0.225)]                # cell neighbours/location
+
+
+@pytest.fixture
+def metrics_df():
     import pandas as pd
     from table_processing.table_metrics import test_tables
 
@@ -15,10 +25,10 @@ def test_metrics():
 
     # Compare the two tables and calculate the metrics
     metrics_df = test_tables({t_name: [trueT,readT]})
+    yield metrics_df, t_name
 
-    assert metrics_df['Overlap'][t_name] == 1.000               # dimensions
-    assert metrics_df['String Similarity'][t_name] == 0.888     # overall contents
-    assert metrics_df['Completeness'][t_name] == 0.560          # cell content completeness
-    assert metrics_df['Purity'][t_name] == 0.440                # cell content purity
-    assert metrics_df['Precision'][t_name] == 0.225             # cell neighbours/location
-    assert metrics_df['Recall'][t_name] == 0.225                # cell neighbours/location
+
+@pytest.mark.parametrize(variable_names, values)
+def test_metrics(parameter, value, metrics_df):
+    metrics_df, t_name = metrics_df
+    assert metrics_df[parameter][t_name] == value

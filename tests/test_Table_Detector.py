@@ -18,22 +18,37 @@ def test_to_excel():
     assert run_Table_Detector_to_excel
 
 
-def test_extract_table_content():
-    import pandas as pd
-    from table_processing.Table import Table
+variable_names = "column, row"
+values = [(0,list(range(0,10))),
+                 (1,list(range(0,10))), 
+                 (2,list(range(0,10))), 
+                 (3,list(range(0,10))), 
+                 (4,[2,3,5,7,9])]
 
+
+@pytest.fixture
+def true_table():
+    import pandas as pd
     t_name = 'test_extract_table_content'
     file_path = './tests/resources/' + t_name + '/'  + t_name
     trueT = pd.read_excel(file_path+'_true.xlsx', dtype=str)
+    yield trueT
+
+
+@pytest.fixture
+def read_table():
+    from table_processing.Table import Table
+    t_name = 'test_extract_table_content'
+    file_path = './tests/resources/' + t_name + '/'  + t_name
     detc_table = Table_Detector(file_path+'.pdf')
     table = detc_table.get_page_data()[0]['tables'][0]['table_content']
     readT = Table.get_as_dataframe(table)
+    yield readT
 
-    assert len(trueT) == len(readT)  # matching row amount
-    assert len(trueT.columns.values) == len(readT.columns.values)  # matching column amount
 
-    correct_cells = {0:list(range(0,10)), 1:list(range(0,10)), 2:list(range(0,10)), 
-                     3:list(range(0,10)), 4:[2,3,5,7,9]}
-    for c in correct_cells.keys():
-        for r in correct_cells[c]:
-            assert str(trueT.iloc[r,c]) == str(readT.iloc[r,c])  # matching cell contents
+@pytest.mark.parametrize(variable_names, values)
+def test_extract_table_content(column, row, true_table, read_table):
+    assert len(true_table) == len(read_table)  # matching row amount
+    assert len(true_table.columns.values) == len(read_table.columns.values)  # matching column amount
+    for r in row:
+        assert str(true_table.iloc[r,column]) == str(read_table.iloc[r,column])  # matching cell contents

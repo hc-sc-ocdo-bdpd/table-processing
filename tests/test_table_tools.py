@@ -61,9 +61,13 @@ def test_remove_duplicate_limits():
     assert expected == unique
 
 
-def test_within_threshold():
+threshold_values_names = "a, b, c, expected_result"
+threshold_values = [(1, 1, 1, True),
+                    (1, 5, 1, False),
+                    (1.3, 1.4, 1, True),
+                    (1.3, 1.4, 0.01, False)]
+@pytest.mark.parametrize(threshold_values_names, threshold_values)
+def test_within_threshold(a, b, c, expected_result):
     from table_processing.table_tools import within_threshold
-    assert within_threshold(1, 1, 1) == True
-    assert within_threshold(1, 5, 1) == False
-    assert within_threshold(1.3, 1.4, 1) == True
-    assert within_threshold(1.3, 1.4, 0.01) == False
+    assert within_threshold(a, b, c) == expected_result
+    

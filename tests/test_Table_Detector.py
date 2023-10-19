@@ -1,11 +1,11 @@
 import sys, os
 import pytest
 sys.path.append(os.path.join(sys.path[0],'table_processing'))
+from table_processing.Table_Detector import Table_Detector
 
 
 @pytest.fixture
 def run_Table_Detector_to_excel():
-    from table_processing.Table_Detector import Table_Detector
     if os.path.exists("all_excel.xlsx"):
         os.remove("all_excel.xlsx")
     table_detector = Table_Detector(filename = "tests/resources/multipletab.pdf")
@@ -21,7 +21,6 @@ def test_to_excel():
 def test_extract_table_content():
     import pandas as pd
     from table_processing.Table import Table
-    from table_processing.Table_Detector import Table_Detector
 
     t_name = 'test_extract_table_content'
     file_path = './tests/resources/' + t_name + '/'  + t_name

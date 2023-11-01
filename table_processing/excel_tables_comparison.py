@@ -4,6 +4,9 @@ import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 
+# Define NaN values
+na_values = ['NaN', 'null', '#N/A', 'nan', 'NULL']
+
 def compare_tables(file1, file2):
     '''
     Compares two Excel files and generates a new Excel file with comparison 
@@ -31,8 +34,8 @@ def compare_tables(file1, file2):
     # Go through each sheet in the comparison workbook
     for sheet_name in comparison_wb.sheetnames:
         if sheet_name in original_wb.sheetnames:
-            original_df = pd.read_excel(file_path_original, sheet_name=sheet_name, header=None)
-            comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name, header=None)
+            original_df = pd.read_excel(file_path_original, sheet_name=sheet_name, header=None, keep_default_na=False, na_values=na_values)
+            comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name, header=None, keep_default_na=False, na_values=na_values)
 
             # Create a dataframe that contains True where the two tables are equal and False where they are not
             if original_df.shape == comparison_df.shape: # If the two tables are the same size

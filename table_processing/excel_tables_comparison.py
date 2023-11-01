@@ -111,7 +111,7 @@ def compare_tables(file1, file2):
     max_percent_correct = np.max(percent_correct_list)
     range_percent_correct = max_percent_correct - min_percent_correct
 
-    # Write statistics for % correct over all sheets to "Main" sheet
+    # Write statistics for % correct over all sheets to "Summary" sheet
     sheet.append([])
     sheet.append(['Summary Statistics:'])
     sheet.append(['Mean (% Correct)', round(mean_percent_correct, 3)])

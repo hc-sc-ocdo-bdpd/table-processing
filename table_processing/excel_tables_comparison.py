@@ -83,7 +83,7 @@ def compare_tables(file1, file2):
             new_sheet.append([])
             new_sheet.append(['Number of Correct Cells', num_true])
             new_sheet.append(['Number of Incorrect Cells', num_cells - num_true])
-            new_sheet.append(['% Correct', percent_true])
+            new_sheet.append(['% Correct', round(percent_true, 3)])
             new_sheet.append([])
             new_sheet.append(['Comparison metrics:'])
 
@@ -96,7 +96,7 @@ def compare_tables(file1, file2):
                 new_sheet.append(row)
 
             # Write sheet name, % correct, and comparison metrics to "Summary" sheet
-            sheet.append([sheet_name, percent_true, metrics_df['Overlap'][0], metrics_df['String Similarity'][0], 
+            sheet.append([sheet_name, round(percent_true, 3), metrics_df['Overlap'][0], metrics_df['String Similarity'][0], 
                 metrics_df['Completeness'][0], metrics_df['Purity'][0], metrics_df['Precision'][0], metrics_df['Recall'][0]])
 
             # Append % correct to list
@@ -114,11 +114,11 @@ def compare_tables(file1, file2):
     # Write statistics for % correct over all sheets to "Main" sheet
     sheet.append([])
     sheet.append(['Summary Statistics:'])
-    sheet.append(['Mean (% Correct)', mean_percent_correct])
-    sheet.append(['Median (% Correct)', median_percent_correct])
-    sheet.append(['Min (% Correct)', min_percent_correct])
-    sheet.append(['Max (% Correct)', max_percent_correct])
-    sheet.append(['Range (% Correct)', range_percent_correct])
+    sheet.append(['Mean (% Correct)', round(mean_percent_correct, 3)])
+    sheet.append(['Median (% Correct)', round(median_percent_correct, 3)])
+    sheet.append(['Min (% Correct)', round(min_percent_correct, 3)])
+    sheet.append(['Max (% Correct)', round(max_percent_correct, 3)])
+    sheet.append(['Range (% Correct)', round(range_percent_correct, 3)])
 
     # Save the workbook to a new file
     save_path = './use_tools/excel_table_comparison/' + file1 + '_and_' + file2 + '_comparison_results.xlsx'

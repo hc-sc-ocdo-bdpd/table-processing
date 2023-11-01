@@ -57,6 +57,9 @@ def compare_tables(file1, file2):
             # Write the sheet name to the worksheet
             new_sheet = workbook.create_sheet(title=sheet_name)
 
+            # Calculate comparison metrics using the test_tables function
+            metrics_df = test_tables({sheet_name: [original_df,comparison_df]})
+
             # Write the second table to the worksheet
             if original_df.size > comparison_df.size:
                 comparison_df = smaller_df_to_larger_df(original_df, comparison_df)
@@ -77,7 +80,6 @@ def compare_tables(file1, file2):
             num_cells = comparison_df.size
             num_true = differences_df.sum().sum()
             percent_true = differences_df.mean().mean() * 100
-            overall_percent_diff = 100 - (num_true / num_cells * 100)
 
             # Write the statistics to the worksheet
             new_sheet.append([])
@@ -86,9 +88,6 @@ def compare_tables(file1, file2):
             new_sheet.append(['% Correct', round(percent_true, 3)])
             new_sheet.append([])
             new_sheet.append(['Comparison metrics:'])
-
-            # Calculate comparison metrics using the test_tables function
-            metrics_df = test_tables({sheet_name: [original_df,comparison_df]})
 
             # Write comparison metrics to the Excel file
             rows = dataframe_to_rows(metrics_df, index=False, header=True)

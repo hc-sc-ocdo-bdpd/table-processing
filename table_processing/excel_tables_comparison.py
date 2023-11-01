@@ -82,9 +82,8 @@ def compare_tables(file1, file2):
             # Write the statistics to the worksheet
             new_sheet.append([])
             new_sheet.append(['Number of Correct Cells', num_true])
-            new_sheet.append(['% Correct', percent_true])
             new_sheet.append(['Number of Incorrect Cells', num_cells - num_true])
-            new_sheet.append(['% Different (Incorrect)', overall_percent_diff])
+            new_sheet.append(['% Correct', percent_true])
             new_sheet.append([])
             new_sheet.append(['Comparison metrics:'])
 

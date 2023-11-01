@@ -22,11 +22,15 @@ def compare_tables(file1, file2):
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Summary"
-    sheet.append(['Sheet name', '% Correct'])  # Add column titles to the "Main" sheet
+    # Add column titles to the "Summary" sheet
+    sheet.append(['Sheet name', '% Correct', 'Overlap', 'String Similarity', 'Completeness', 'Purity', 'Precision', 'Recall'])
 
-    # Go through each sheet in the original workbook
-    for sheet_name in original_wb.sheetnames:
-        if sheet_name in comparison_wb.sheetnames:
+    # Initialize list to store % correct values
+    percent_correct_list = []
+
+    # Go through each sheet in the comparison workbook
+    for sheet_name in comparison_wb.sheetnames:
+        if sheet_name in original_wb.sheetnames:
             original_df = pd.read_excel(file_path_original, sheet_name=sheet_name, header=None)
             comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name, header=None)
 
@@ -72,12 +76,8 @@ def compare_tables(file1, file2):
             # Calculate the statistics
             num_cells = comparison_df.size
             num_true = differences_df.sum().sum()
-            overall_percent_diff = 100 - (num_true / num_cells * 100)
             percent_true = differences_df.mean().mean() * 100
-            median_true = np.median(differences_df) * 100
-            min_true = np.min(differences_df) * 100
-            max_true = np.max(differences_df) * 100
-            range_true = max_true - min_true
+            overall_percent_diff = 100 - (num_true / num_cells * 100)
 
             # Write the statistics to the worksheet
             new_sheet.append([])
@@ -85,12 +85,6 @@ def compare_tables(file1, file2):
             new_sheet.append(['% Correct', percent_true])
             new_sheet.append(['Number of Incorrect Cells', num_cells - num_true])
             new_sheet.append(['% Different (Incorrect)', overall_percent_diff])
-            new_sheet.append([])
-            new_sheet.append(['Summary Statistics:'])
-            new_sheet.append(['Median % Correct', median_true])
-            new_sheet.append(['Min % Correct', min_true])
-            new_sheet.append(['Max % Correct', max_true])
-            new_sheet.append(['Range Correct', range_true])
             new_sheet.append([])
             new_sheet.append(['Comparison metrics:'])
 
@@ -102,10 +96,30 @@ def compare_tables(file1, file2):
             for row in rows:
                 new_sheet.append(row)
 
-            # Write sheet name and % Correct to "Main" sheet
-            sheet.append([sheet_name, percent_true])
+            # Write sheet name, % correct, and comparison metrics to "Summary" sheet
+            sheet.append([sheet_name, percent_true, metrics_df['Overlap'][0], metrics_df['String Similarity'][0], 
+                metrics_df['Completeness'][0], metrics_df['Purity'][0], metrics_df['Precision'][0], metrics_df['Recall'][0]])
+
+            # Append % correct to list
+            percent_correct_list.append(percent_true)
         else:
-            print(f"{sheet_name} not found in {file2}")
+            print(f"{sheet_name} not found in {file1}.xlsx")
+
+    # Calculate statistics for % correct over all sheets
+    mean_percent_correct = np.mean(percent_correct_list)
+    median_percent_correct = np.median(percent_correct_list)
+    min_percent_correct = np.min(percent_correct_list)
+    max_percent_correct = np.max(percent_correct_list)
+    range_percent_correct = max_percent_correct - min_percent_correct
+
+    # Write statistics for % correct over all sheets to "Main" sheet
+    sheet.append([])
+    sheet.append(['Summary Statistics:'])
+    sheet.append(['Mean (% Correct)', mean_percent_correct])
+    sheet.append(['Median (% Correct)', median_percent_correct])
+    sheet.append(['Min (% Correct)', min_percent_correct])
+    sheet.append(['Max (% Correct)', max_percent_correct])
+    sheet.append(['Range (% Correct)', range_percent_correct])
 
     # Save the workbook to a new file
     save_path = './use_tools/excel_table_comparison/' + file1 + '_and_' + file2 + '_comparison_results.xlsx'

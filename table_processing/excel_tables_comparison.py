@@ -27,17 +27,36 @@ def compare_tables(file1, file2):
     # Go through each sheet in the original workbook
     for sheet_name in original_wb.sheetnames:
         if sheet_name in comparison_wb.sheetnames:
-            original_df = pd.read_excel(file_path_original, sheet_name=sheet_name)
-            comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name)
+            original_df = pd.read_excel(file_path_original, sheet_name=sheet_name, header=None)
+            comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name, header=None)
 
             # Create a dataframe that contains True where the two tables are equal and False where they are not
-            differences_df = pd.DataFrame(comparison_df.values == original_df.values, index=original_df.index, columns=original_df.columns)
+            if original_df.shape == comparison_df.shape: # If the two tables are the same size
+                differences_df = pd.DataFrame(comparison_df.values == original_df.values, index=original_df.index, columns=original_df.columns)
+            else: # If the two tables are different sizes
+                if original_df.size > comparison_df.size:   # Determine which dataframe is larger
+                    larger_df = original_df
+                    smaller_df = comparison_df
+                else:
+                    larger_df = comparison_df
+                    smaller_df = original_df
+
+                new_df = smaller_df_to_larger_df(larger_df, smaller_df)
+                
+                # Fill NaN values in both DataFrames so they have the same shape
+                larger_df_filled = larger_df.fillna('blank')
+                new_df_filled = new_df.fillna('blank')
+
+                # Compare the filled DataFrames
+                differences_df = pd.DataFrame(larger_df_filled == new_df_filled, index=larger_df.index, columns=larger_df.columns)
 
             # Write the sheet name to the worksheet
             new_sheet = workbook.create_sheet(title=sheet_name)
 
             # Write the second table to the worksheet
-            rows = dataframe_to_rows(comparison_df, index=False, header=True)
+            if original_df.size > comparison_df.size:
+                comparison_df = smaller_df_to_larger_df(original_df, comparison_df)
+            rows = dataframe_to_rows(comparison_df, index=False, header=False)
             for row in rows:
                 new_sheet.append(row)
 
@@ -51,7 +70,7 @@ def compare_tables(file1, file2):
                         cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
 
             # Calculate the statistics
-            num_cells = original_df.size
+            num_cells = comparison_df.size
             num_true = differences_df.sum().sum()
             overall_percent_diff = 100 - (num_true / num_cells * 100)
             percent_true = differences_df.mean().mean() * 100
@@ -91,6 +110,19 @@ def compare_tables(file1, file2):
     # Save the workbook to a new file
     save_path = './use_tools/excel_table_comparison/' + file1 + '_and_' + file2 + '_comparison_results.xlsx'
     workbook.save(save_path)
+
+def smaller_df_to_larger_df(larger_df, smaller_df):
+                    '''
+                    Creates a new dataframe with the same shape as the larger dataframe, and fills it with empty values.
+                    Copies the values from the smaller dataframe into the corresponding cells of the new dataframe.
+                    '''
+                    # Create a new dataframe with the same shape as the larger dataframe, and fill it with empty values
+                    new_df = pd.DataFrame(index=larger_df.index, columns=larger_df.columns)
+
+                    # Copy the values from the smaller dataframe into the corresponding cells of the new dataframe
+                    new_df.loc[smaller_df.index, smaller_df.columns] = smaller_df.values
+                    
+                    return new_df
 
 # Get file names from user input
 first_file = input("Enter the name of the first Excel file: ")

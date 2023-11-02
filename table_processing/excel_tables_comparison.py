@@ -5,7 +5,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 
 # Define NaN values
-na_values = ['NaN', 'null', '#N/A', 'nan', 'NULL']
+na_values = ['NaN', 'null', '#N/A', 'nan', 'NULL', '']
 
 def compare_tables(file1, file2):
     '''

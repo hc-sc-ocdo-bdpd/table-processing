@@ -9,7 +9,10 @@ def overlap(df1, df2):
     # Find union area (multiplication of dim maxs minus multiplication of dim max-min diffs)
     xmax = max(df1.shape[0], df2.shape[0])
     ymax = max(df1.shape[1], df2.shape[1])
-    union = xmax*ymax - (xmax-xmin)*(ymax-ymin)
+    if (df1.shape[0] > df2.shape[0] and df1.shape[1] > df2.shape[1]) or (df1.shape[0] < df2.shape[0] and df1.shape[1] < df2.shape[1]): # If one table is smaller than the other
+        union = xmax*ymax
+    else:
+        union = xmax*ymax - (xmax-xmin)*(ymax-ymin)
     # Calculate overlap
     overlap_pct = intersection / union
     return round(overlap_pct, 3)

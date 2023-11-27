@@ -150,6 +150,31 @@ def recall(df1, df2):
         recall_score = correct_pl / total_pl
     return round(recall_score, 3)
 
+def accuracy(df1, df2):
+    # Transform tables to lists of lists
+    vals1 = df1.values.tolist()
+    vals2 = df2.values.tolist()
+    # Initialize numerator & denominator counters
+    acc_count = 0
+    real_total = df1.size
+    
+    # Loop through values
+    for i in range(0, len(vals1)):
+        row = vals1[i]
+        for j in range(0, len(row)):
+            cell1 = row[j]
+            # Verify if cell1 is contained in cell2 (completely identified)
+            try:
+                cell2 = vals2[i][j]
+                if cell1 == cell2:
+                    acc_count += 1
+            except IndexError:
+                pass
+    # Calculate accuracy
+    accuracy_score = acc_count / real_total
+    return round(accuracy_score, 3)
+
+
 def all_metrics(df1, df2):
     # Clean & format dataframes
     df1 = df1.fillna('').astype(str)
@@ -160,7 +185,8 @@ def all_metrics(df1, df2):
                'Completeness':       completeness(df1, df2),
                'Purity':             purity(df1, df2),
                'Precision':          precision(df1, df2),
-               'Recall':             recall(df1, df2)}
+               'Recall':             recall(df1, df2),
+               'Accuracy':           accuracy(df1, df2)}
     return results
 
 def test_tables(tables):

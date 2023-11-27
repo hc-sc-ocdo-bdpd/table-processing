@@ -22,3 +22,4 @@ def test_metrics():
     assert metrics_df['Purity'][t_name] == 0.440                # cell content purity
     assert metrics_df['Precision'][t_name] == 0.225             # cell neighbours/location
     assert metrics_df['Recall'][t_name] == 0.225                # cell neighbours/location
+    assert metrics_df['Accuracy'][t_name] == 0.44               # cell content accuracy

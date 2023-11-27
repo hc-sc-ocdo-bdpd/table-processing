@@ -1,23 +1,26 @@
-from table_metrics import test_tables
+from table_metrics import test_tables, accuracy
 import pandas as pd
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import numpy as np
 
-# Define NaN values
-na_values = ['NaN', 'null', '#N/A', 'nan', 'NULL', '']
-
 def compare_tables(file1, file2):
     '''
     Compares two Excel files and generates a new Excel file with comparison 
-    results of the tables within each sheet. Input should be the file name,
-    and Excel files should be stored in use_tools > excel_table_comparison > excel_files.
+    results of the tables within each sheet. Input should be the file path.
     Results are generated in use_tools > excel_table_comparison.
+
+    Note: This function is based off of the accuracy function from table_metrics,
+    so the # of correct cells is calculated as strictly the # of cells that are
+    in the second table that are equal to the cells in the first.
+
+    It does not account for cells that are in the first but not in the second, or 
+    cells that are in the second (outside of the range of the first table) but not in the first.
     '''
     
     # Import Excel file paths
-    file_path_original = './use_tools/excel_table_comparison/excel_files/' + file1 + '.xlsx'
-    file_path_comparison = './use_tools/excel_table_comparison/excel_files/' + file2 + '.xlsx'
+    file_path_original = file1
+    file_path_comparison = file2
     original_wb = openpyxl.load_workbook(file_path_original)
     comparison_wb = openpyxl.load_workbook(file_path_comparison)
 
@@ -26,36 +29,16 @@ def compare_tables(file1, file2):
     sheet = workbook.active
     sheet.title = "Summary"
     # Add column titles to the "Summary" sheet
-    sheet.append(['Sheet name', '% Correct', 'Overlap', 'String Similarity', 'Completeness', 'Purity', 'Precision', 'Recall'])
+    sheet.append(['Sheet name', 'Accuracy', 'Overlap', 'String Similarity', 'Completeness', 'Purity', 'Precision', 'Recall'])
 
-    # Initialize list to store % correct values
-    percent_correct_list = []
+    # Initialize list to store accuracy values
+    accuracy_list = []
 
     # Go through each sheet in the comparison workbook
     for sheet_name in comparison_wb.sheetnames:
         if sheet_name in original_wb.sheetnames:
-            original_df = pd.read_excel(file_path_original, sheet_name=sheet_name, header=None, keep_default_na=False, na_values=na_values)
-            comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name, header=None, keep_default_na=False, na_values=na_values)
-
-            # Create a dataframe that contains True where the two tables are equal and False where they are not
-            if original_df.shape == comparison_df.shape: # If the two tables are the same size
-                differences_df = pd.DataFrame(comparison_df.values == original_df.values, index=original_df.index, columns=original_df.columns)
-            else: # If the two tables are different sizes
-                if original_df.size > comparison_df.size:   # Determine which dataframe is larger
-                    larger_df = original_df
-                    smaller_df = comparison_df
-                else:
-                    larger_df = comparison_df
-                    smaller_df = original_df
-
-                new_df = smaller_df_to_larger_df(larger_df, smaller_df)
-                
-                # Fill NaN values in both DataFrames so they have the same shape
-                larger_df_filled = larger_df.fillna('blank')
-                new_df_filled = new_df.fillna('blank')
-
-                # Compare the filled DataFrames
-                differences_df = pd.DataFrame(larger_df_filled == new_df_filled, index=larger_df.index, columns=larger_df.columns)
+            original_df = pd.read_excel(file_path_original, sheet_name=sheet_name, header=None, keep_default_na=False)
+            comparison_df = pd.read_excel(file_path_comparison, sheet_name=sheet_name, header=None, keep_default_na=False)
 
             # Write the sheet name to the worksheet
             new_sheet = workbook.create_sheet(title=sheet_name)
@@ -64,31 +47,50 @@ def compare_tables(file1, file2):
             metrics_df = test_tables({sheet_name: [original_df,comparison_df]})
 
             # Write the second table to the worksheet
-            if original_df.size > comparison_df.size:
-                comparison_df = smaller_df_to_larger_df(original_df, comparison_df)
             rows = dataframe_to_rows(comparison_df, index=False, header=False)
             for row in rows:
                 new_sheet.append(row)
 
+            # Create a dataframe differences_df that will contain True where the two tables are equal and False where they are not
+            differences_df = pd.DataFrame(np.full_like(original_df, False))
+
+            # Transform tables to lists of lists
+            vals1 = original_df.values.tolist()
+            vals2 = comparison_df.values.tolist()
+
+            # Loop through values
+            for i in range(0, len(vals1)):
+                row = vals1[i]
+                for j in range(0, len(row)):
+                    cell1 = row[j]
+                    # Verify if cell1 is contained in cell2 (completely identified)
+                    try:
+                        cell2 = vals2[i][j]
+                        if cell1 == cell2:
+                            # If the cells are equal, set the corresponding cell in differences_df to True
+                            differences_df.iat[i, j] = True
+                    except IndexError:
+                        pass
+                    
             # Format the cells that are different from the original table
-            for row in new_sheet.iter_rows(min_row=new_sheet.max_row-len(comparison_df)+1, min_col=1):
+            for row in new_sheet.iter_rows(min_row=new_sheet.max_row-len(comparison_df)+1, min_col=1, max_col=len(comparison_df.columns)):
                 for cell in row:
-                    # Check if the cell is different from the original table
-                    list_of_rows = differences_df.values
-                    if list_of_rows[cell.row-new_sheet.max_row+len(comparison_df)-1, cell.column-1] == False:
-                        # If the cell is different, highlight it with yellow
-                        cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+                    # Check if the cell is within the differences_df range
+                    if cell.row-new_sheet.max_row+len(comparison_df)-1 < len(differences_df) and cell.column-1 < len(differences_df.columns):
+                        # Check if the cell is different from the original table
+                        if differences_df.iat[cell.row-new_sheet.max_row+len(comparison_df)-1, cell.column-1] == False:
+                            # If the cell is different, highlight it with yellow
+                            cell.fill = openpyxl.styles.PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
 
             # Calculate the statistics
-            num_cells = comparison_df.size
+            num_cells = original_df.size
             num_true = differences_df.sum().sum()
-            percent_true = differences_df.mean().mean() * 100
 
             # Write the statistics to the worksheet
             new_sheet.append([])
-            new_sheet.append(['Number of Correct Cells', num_true])
-            new_sheet.append(['Number of Incorrect Cells', num_cells - num_true])
-            new_sheet.append(['% Correct', round(percent_true, 3)])
+            new_sheet.append(['Number of Correct Cells (Cells equal to original table)', num_true])
+            new_sheet.append(['Number of Incorrect Cells (Cells not equal to original table)', num_cells - num_true])
+            new_sheet.append(['Accuracy', accuracy(original_df, comparison_df)])
             new_sheet.append([])
             new_sheet.append(['Comparison metrics:'])
 
@@ -97,47 +99,34 @@ def compare_tables(file1, file2):
             for row in rows:
                 new_sheet.append(row)
 
-            # Write sheet name, % correct, and comparison metrics to "Summary" sheet
-            sheet.append([sheet_name, round(percent_true, 3), metrics_df['Overlap'][0], metrics_df['String Similarity'][0], 
+            # Write sheet name and comparison metrics to "Summary" sheet
+            sheet.append([sheet_name, metrics_df['Accuracy'][0], metrics_df['Overlap'][0], metrics_df['String Similarity'][0], 
                 metrics_df['Completeness'][0], metrics_df['Purity'][0], metrics_df['Precision'][0], metrics_df['Recall'][0]])
 
             # Append % correct to list
-            percent_correct_list.append(percent_true)
+            accuracy_list.append(accuracy(original_df, comparison_df))
         else:
-            print(f"{sheet_name} not found in {file1}.xlsx")
+            print(f"{sheet_name} not found in {file1}")
 
     # Calculate statistics for % correct over all sheets
-    mean_percent_correct = np.mean(percent_correct_list)
-    median_percent_correct = np.median(percent_correct_list)
-    min_percent_correct = np.min(percent_correct_list)
-    max_percent_correct = np.max(percent_correct_list)
-    range_percent_correct = max_percent_correct - min_percent_correct
+    mean_accuracy = np.mean(accuracy_list)
+    median_accuracy = np.median(accuracy_list)
+    min_accuracy = np.min(accuracy_list)
+    max_accuracy = np.max(accuracy_list)
+    range_accuracy = max_accuracy - min_accuracy
 
     # Write statistics for % correct over all sheets to "Summary" sheet
     sheet.append([])
     sheet.append(['Summary Statistics:'])
-    sheet.append(['Mean (% Correct)', round(mean_percent_correct, 3)])
-    sheet.append(['Median (% Correct)', round(median_percent_correct, 3)])
-    sheet.append(['Min (% Correct)', round(min_percent_correct, 3)])
-    sheet.append(['Max (% Correct)', round(max_percent_correct, 3)])
-    sheet.append(['Range (% Correct)', round(range_percent_correct, 3)])
+    sheet.append(['Mean (Accuracy)', round(mean_accuracy, 3)])
+    sheet.append(['Median (Accuracy)', round(median_accuracy, 3)])
+    sheet.append(['Min (Accuracy)', round(min_accuracy, 3)])
+    sheet.append(['Max (Accuracy)', round(max_accuracy, 3)])
+    sheet.append(['Range (Accuracy)', round(range_accuracy, 3)])
 
     # Save the workbook to a new file
-    save_path = './use_tools/excel_table_comparison/' + file1 + '_and_' + file2 + '_comparison_results.xlsx'
+    save_path = './use_tools/excel_table_comparison/table_comparison_results.xlsx'
     workbook.save(save_path)
-
-def smaller_df_to_larger_df(larger_df, smaller_df):
-                    '''
-                    Creates a new dataframe with the same shape as the larger dataframe, and fills it with empty values.
-                    Copies the values from the smaller dataframe into the corresponding cells of the new dataframe.
-                    '''
-                    # Create a new dataframe with the same shape as the larger dataframe, and fill it with empty values
-                    new_df = pd.DataFrame(index=larger_df.index, columns=larger_df.columns)
-
-                    # Copy the values from the smaller dataframe into the corresponding cells of the new dataframe
-                    new_df.loc[smaller_df.index, smaller_df.columns] = smaller_df.values
-                    
-                    return new_df
 
 # Get file names from user input
 first_file = input("Enter the name of the first Excel file: ")

@@ -12,7 +12,8 @@ def write_report(exported_df, exported_dfName):
         writerFinal.sheets[exported_dfName].set_column(idx, idx, max_len)
 
 # Get all sheets from randomized generation tests
-path = r'table_trials_results/'
+# path = r'table_trials_results/'
+path = r'performance_testing/table_trials_results/'
 xlsx_sheets = os.listdir(path)
 xlsx_sheets = [x for x in xlsx_sheets if '.xlsx' in x]
 if 'table_metrics_ALL.xlsx' in xlsx_sheets: xlsx_sheets.remove('table_metrics_ALL.xlsx')

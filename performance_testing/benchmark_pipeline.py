@@ -1,5 +1,7 @@
 # Import table classes, functions, and packages
 from GeneratedTable import GeneratedTable
+import sys
+sys.path.insert(1, './table_processing')
 from Table_Detector import Table_Detector
 from table_metrics import test_tables
 import pandas as pd
